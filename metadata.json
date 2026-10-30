@@ -1,0 +1,6 @@
+{
+  "name": "KisanExpert",
+  "description": "Connecting farmers with agricultural experts for paid consultations, crop advisory, and real-time guidance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

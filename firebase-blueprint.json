@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Farmer or Agricultural Expert profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["farmer", "expert"] },
+        "location": { "type": "string", "maxLength": 200, "description": "Village/District/State for farmer" },
+        "expertise": { "type": "array", "description": "List of expertise categories for expert" },
+        "experience": { "type": "number", "description": "Years of experience" },
+        "bio": { "type": "string", "maxLength": 500 },
+        "fee": { "type": "number", "description": "Consultation fee in INR" },
+        "isAvailable": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "Agricultural consultation booking between farmer and expert",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "farmerId": { "type": "string" },
+        "farmerName": { "type": "string", "maxLength": 100 },
+        "farmerLocation": { "type": "string", "maxLength": 200 },
+        "expertId": { "type": "string" },
+        "expertName": { "type": "string", "maxLength": 100 },
+        "cropName": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["Pest", "Disease", "Soil", "Irrigation", "Fertilizer", "Other"] },
+        "description": { "type": "string", "maxLength": 1000 },
+        "fee": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "status": { "type": "string", "enum": ["Pending", "Accepted", "Declined", "Completed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "lastMessage": { "type": "string", "maxLength": 500 },
+        "lastMessageTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["farmerId", "expertId", "cropName", "category", "description", "fee", "paymentStatus", "status"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Real-time consultation chat message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "consultationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "senderRole": { "type": "string", "enum": ["farmer", "expert"] },
+        "text": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["consultationId", "senderId", "senderRole", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles for farmers and experts"
+    },
+    "/consultations/{consultationId}": {
+      "schema": "Consultation",
+      "description": "Booked consultations between farmer and expert"
+    },
+    "/consultations/{consultationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Chat messages within an accepted consultation"
+    }
+  }
+}

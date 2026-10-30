@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             (data.role == 'farmer' || data.role == 'expert');
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Any signed in user can view expert profiles or their own profile
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if false;
+    }
+
+    // Consultations collection
+    match /consultations/{consultationId} {
+      allow get: if isSignedIn() && (
+        resource.data.farmerId == request.auth.uid || 
+        resource.data.expertId == request.auth.uid
+      );
+
+      allow list: if isSignedIn() && (
+        resource.data.farmerId == request.auth.uid || 
+        resource.data.expertId == request.auth.uid
+      );
+
+      // Farmer creates booking
+      allow create: if isSignedIn() && 
+        request.resource.data.farmerId == request.auth.uid &&
+        request.resource.data.status == 'Pending' &&
+        request.resource.data.paymentStatus == 'Paid';
+
+      // Expert can Accept or Decline; Farmer or Expert can update (e.g. Completed or lastMessage)
+      allow update: if isSignedIn() && (
+        resource.data.farmerId == request.auth.uid || 
+        resource.data.expertId == request.auth.uid
+      );
+
+      allow delete: if false;
+
+      // Real-time chat messages
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/consultations/$(consultationId)).data.farmerId == request.auth.uid ||
+          get(/databases/$(database)/documents/consultations/$(consultationId)).data.expertId == request.auth.uid
+        );
+
+        allow create: if isSignedIn() && 
+          request.resource.data.senderId == request.auth.uid &&
+          (
+            get(/databases/$(database)/documents/consultations/$(consultationId)).data.farmerId == request.auth.uid ||
+            get(/databases/$(database)/documents/consultations/$(consultationId)).data.expertId == request.auth.uid
+          );
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}
